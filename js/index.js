@@ -99,3 +99,4 @@ function displayIngredients() {
   );
   document.getElementById("rowData").innerHTML = cols;
 }
+
