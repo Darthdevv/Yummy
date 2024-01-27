@@ -1,19 +1,81 @@
 ///<reference types="../@types/jquery" />
 "use strict";
 const searchContainer = document.getElementById('searchContainer');
+const contactsContainer = document.getElementById('contactsContainer');
 const rowData = document.getElementById("rowData");
+let submitBtn;
+
 
 let categories = [];
 let area = [];
 let ingredients = [];
+let meals = [];
+let firstMeal = [];
 
 
-displayInputs();
-// getIngredients();
-// getArea();
-// getCategories();
+$(function () {
+  searchByName("").then(() => {
+    $(".loading-screen").fadeOut(500);
+    $("body").css("overflow", "visible");
+  });
+});
+
+function openSideNav() {
+  $(".side-nav-menu").animate(
+    {
+      left: 0,
+    },
+    500
+  );
+
+  $(".open-close-icon").removeClass("fa-align-justify");
+  $(".open-close-icon").addClass("fa-x");
+
+  for (let i = 0; i < 5; i++) {
+    $(".links li")
+      .eq(i)
+      .animate(
+        {
+          top: 0,
+        },
+        (i + 5) * 100
+      );
+  }
+}
+
+function closeSideNav() {
+  let boxWidth = $(".side-nav-menu .nav-tab").outerWidth();
+  $(".side-nav-menu").animate(
+    {
+      left: -boxWidth,
+    },
+    500
+  );
+
+  $(".open-close-icon").addClass("fa-align-justify");
+  $(".open-close-icon").removeClass("fa-x");
+
+  $(".links li").animate(
+    {
+      top: 300,
+    },
+    500
+  );
+}
+closeSideNav();
+
+$(".side-nav-menu i.open-close-icon").click(() => {
+  if ($(".side-nav-menu").css("left") == "0px") {
+    closeSideNav();
+  } else {
+    openSideNav();
+  }
+});
+
 
 async function getCategories() {
+  rowData.innerHTML = "";
+  $(".inner-loading-screen").fadeIn(300);
   const response = await fetch(
     `https://www.themealdb.com/api/json/v1/1/categories.php`
   );
@@ -21,6 +83,7 @@ async function getCategories() {
   categories = meals.categories;
   console.log(categories);
   displayCategories();
+  $(".inner-loading-screen").fadeOut(300);
 }
 
 
@@ -47,6 +110,8 @@ function displayCategories() {
   `)
   );
   rowData.innerHTML = cols;
+  searchContainer.innerHTML = '';
+  contactsContainer.innerHTML = '';
 }
 
 
@@ -73,7 +138,9 @@ function displayArea() {
       </div>
   `)
   );
-  rowData.innerHTML = cols; 
+  rowData.innerHTML = cols;
+  searchContainer.innerHTML = "";
+  contactsContainer.innerHTML = "";
 }
 
 async function getIngredients() {
@@ -101,19 +168,134 @@ function displayIngredients() {
   `)
   );
   rowData.innerHTML = cols;
+  searchContainer.innerHTML = "";
+  contactsContainer.innerHTML = "";
 }
 
-
-function displayInputs() {
+function displaySearchInputs() {
   searchContainer.innerHTML = `
     <div class="row py-4 ">
       <div class="col-md-6 ">
         <input onkeyup="searchByName(this.value)" class="form-control bg-transparent text-white" type="text" placeholder="Search By Name">
       </div>
       <div class="col-md-6">
-        <input onkeyup="searchByFLetter(this.value)" maxlength="1" class="form-control bg-transparent text-white" type="text" placeholder="Search By First Letter">
+        <input onkeyup="searchByFirstLetter(this.value)" maxlength="1" class="form-control bg-transparent text-white" type="text" placeholder="Search By First Letter">
       </div>
     </div>
   `
   rowData.innerHTML = '';
+  contactsContainer.innerHTML = ''
 }
+
+async function searchByName(query) {
+  closeSideNav();
+  rowData.innerHTML = "";
+  $(".inner-loading-screen").fadeIn(300);
+
+  const response = await fetch(
+    `https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`
+  );
+  const meal = await response.json();
+  meals = meal.meals
+  displayMeals();
+  $(".inner-loading-screen").fadeOut(300);
+}
+
+async function searchByFirstLetter(letter) {
+  closeSideNav();
+  rowData.innerHTML = "";
+  $(".inner-loading-screen").fadeIn(300);
+
+  const response = await fetch(
+    `https://www.themealdb.com/api/json/v1/1/search.php?f=${letter}`
+  );
+  const meal = await response.json();
+  firstMeal = meal.meals;
+  displayMealsByFirstLetter();
+  $(".inner-loading-screen").fadeOut(300);
+}
+
+function displayMeals() {
+  let cols = "";
+  meals.map((item) => {
+    cols += `
+        <div class="col-md-3">
+                <div onclick="getMealDetails(${item.idMeal})" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
+                    <img class="w-100" src="${item.strMealThumb}" alt="" srcset="">
+                    <div class="meal-layer position-absolute d-flex align-items-center text-black p-2">
+                        <h3>${item.strMeal}</h3>
+                    </div>
+                </div>
+        </div>
+        `;
+  });
+  rowData.innerHTML = cols;
+}
+
+function displayMealsByFirstLetter() {
+  let cols = "";
+  firstMeal.map((item) => {
+    cols += `
+        <div class="col-md-3">
+                <div onclick="getMealDetails(${item.idMeal})" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
+                    <img class="w-100" src="${item.strMealThumb}" alt="" srcset="">
+                    <div class="meal-layer position-absolute d-flex align-items-center text-black p-2">
+                        <h3>${item.strMeal}</h3>
+                    </div>
+                </div>
+        </div>
+        `;
+  });
+  rowData.innerHTML = cols;
+}
+
+function displayContactsInputs() {
+  contactsContainer.innerHTML = `
+  <div class="contact  d-flex justify-content-center align-items-center">
+    <div class="container w-75 ">
+      <div class="row g-4">
+            <div class="col-md-6">
+                <input id="nameInput" onkeyup="inputsValidation()" type="text" class="form-control bg-transparent text-white" placeholder="Enter Your Name">
+                <div id="nameAlert" class="alert alert-danger w-100 mt-2 d-none">
+                    Special characters and numbers not allowed
+                </div>
+            </div>
+            <div class="col-md-6">
+                <input id="emailInput" onkeyup="inputsValidation()" type="email" class="form-control bg-transparent text-white " placeholder="Enter Your Email">
+                <div id="emailAlert" class="alert alert-danger w-100 mt-2 d-none">
+                    Email not valid *exemple@yyy.zzz
+                </div>
+            </div>
+            <div class="col-md-6">
+                <input id="phoneInput" onkeyup="inputsValidation()" type="text" class="form-control bg-transparent text-white " placeholder="Enter Your Phone">
+                <div id="phoneAlert" class="alert alert-danger w-100 mt-2 d-none">
+                    Enter valid Phone Number
+                </div>
+            </div>
+            <div class="col-md-6">
+                <input id="ageInput" onkeyup="inputsValidation()" type="number" class="form-control bg-transparent text-white " placeholder="Enter Your Age">
+                <div id="ageAlert" class="alert alert-danger w-100 mt-2 d-none">
+                    Enter valid age
+                </div>
+            </div>
+            <div class="col-md-6">
+                <input id="passwordInput" onkeyup="inputsValidation()" type="password" class="form-control bg-transparent text-white " placeholder="Enter Your Password">
+                <div id="passwordAlert" class="alert alert-danger w-100 mt-2 d-none">
+                    Enter valid password *Minimum eight characters, at least one letter and one number:*
+                </div>
+            </div>
+            <div class="col-md-6">
+                <input id="repasswordInput" onkeyup="inputsValidation()" type="password" class="form-control bg-transparent text-white " placeholder="Repassword">
+                <div id="repasswordAlert" class="alert alert-danger w-100 mt-2 d-none">
+                    Enter valid repassword 
+                </div>
+            </div>
+        </div>
+          <button id="submitBtn" disabled class="btn btn-outline-warning w-100 px-2 mt-3">Submit</button>
+      </div>
+    </div>
+  `;
+  searchContainer.innerHTML = '';
+  rowData.innerHTML = '';
+}
+
