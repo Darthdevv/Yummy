@@ -1,12 +1,15 @@
 ///<reference types="../@types/jquery" />
 "use strict";
+const searchContainer = document.getElementById('searchContainer');
+const rowData = document.getElementById("rowData");
 
 let categories = [];
 let area = [];
 let ingredients = [];
 
 
-getIngredients();
+displayInputs();
+// getIngredients();
 // getArea();
 // getCategories();
 
@@ -43,7 +46,7 @@ function displayCategories() {
       </div>
   `)
   );
-  document.getElementById('rowData').innerHTML = cols;
+  rowData.innerHTML = cols;
 }
 
 
@@ -70,7 +73,7 @@ function displayArea() {
       </div>
   `)
   );
-  document.getElementById("rowData").innerHTML = cols; 
+  rowData.innerHTML = cols; 
 }
 
 async function getIngredients() {
@@ -97,6 +100,20 @@ function displayIngredients() {
       </div>
   `)
   );
-  document.getElementById("rowData").innerHTML = cols;
+  rowData.innerHTML = cols;
 }
 
+
+function displayInputs() {
+  searchContainer.innerHTML = `
+    <div class="row py-4 ">
+      <div class="col-md-6 ">
+        <input onkeyup="searchByName(this.value)" class="form-control bg-transparent text-white" type="text" placeholder="Search By Name">
+      </div>
+      <div class="col-md-6">
+        <input onkeyup="searchByFLetter(this.value)" maxlength="1" class="form-control bg-transparent text-white" type="text" placeholder="Search By First Letter">
+      </div>
+    </div>
+  `
+  rowData.innerHTML = '';
+}
